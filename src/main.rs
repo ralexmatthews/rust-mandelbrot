@@ -8,10 +8,10 @@ mod complex_numbers;
 // the next answer comes from squaring the previous answer and adding the base
 // operand^2 + base
 fn iterate(
-    base: &complex_numbers::ComplexNumber,
-    operand: &complex_numbers::ComplexNumber,
+    base: complex_numbers::ComplexNumber,
+    operand: complex_numbers::ComplexNumber,
 ) -> complex_numbers::ComplexNumber {
-    complex_numbers::add_complex_numbers(&complex_numbers::square_complex_number(operand), base)
+    complex_numbers::add_complex_numbers(complex_numbers::square_complex_number(operand), base)
 }
 
 // Returns the number of iterations it took to either exceed two or repeat a number
@@ -26,15 +26,15 @@ fn iterate(
 fn find_converges(
     base: complex_numbers::ComplexNumber,
     operand: complex_numbers::ComplexNumber,
-    iteration: u8,
-) -> Option<u8> {
-    if iteration >= 255 {
+    iteration: u16,
+) -> Option<u16> {
+    if iteration >= 1024 {
         return None;
     }
 
-    let result = iterate(&base, &operand);
+    let result = iterate(base, operand);
 
-    let magnitude = complex_numbers::get_magnitude(&result);
+    let magnitude = complex_numbers::get_magnitude(result);
     if magnitude >= 2.0 {
         return Some(iteration);
     }
@@ -42,14 +42,14 @@ fn find_converges(
     find_converges(base, result, iteration + 1)
 }
 
-// maps a number between 0 and 255 to a pixel color
-fn map_i32_to_pixel(value: u8) -> Pixel {
-    px!(255, 255 - value, 255 - value)
+// maps a number between 0 and 1024 to a pixel color
+fn map_iterations_to_pixel(value: u16) -> Pixel {
+    px!(255, 255 - (value / 4), 255 - (value / 4))
 }
 
 fn main() {
     let out_of_bounds: f32 = 2.0;
-    let resolution: u16 = 8000;
+    let resolution: u16 = 16000;
 
     let mut image = Image::new(u32::from(resolution), u32::from(resolution));
 
@@ -70,7 +70,7 @@ fn main() {
             let uy = u32::try_from(y + half_of_resolution).unwrap();
 
             match result {
-                Some(x) => image.set_pixel(ux, uy, map_i32_to_pixel(x)),
+                Some(x) => image.set_pixel(ux, uy, map_iterations_to_pixel(x)),
                 None => image.set_pixel(ux, uy, px!(0, 0, 0)),
             }
         }
