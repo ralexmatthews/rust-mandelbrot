@@ -4,6 +4,9 @@ use bmp::{Image, Pixel};
 
 mod complex_numbers;
 
+// Returns the result of the Mandelbrot iteration
+// the next answer comes from squaring the previous answer and adding the base
+// operand^2 + base
 fn iterate(
     base: &complex_numbers::ComplexNumber,
     operand: &complex_numbers::ComplexNumber,
@@ -11,6 +14,15 @@ fn iterate(
     complex_numbers::add_complex_numbers(&complex_numbers::square_complex_number(operand), base)
 }
 
+// Returns the number of iterations it took to either exceed two or repeat a number
+//
+// base is the complex number being tested
+// operand is the result of the current iteration and starts at 0
+// iteration is the number of iterations that have been performed so far
+// set_of_used_numbers is a list of numbers that have already been tested
+//
+// If the number converges, None is returned
+// If the number diverges, Some(iteration) is returned
 fn find_converges(
     base: complex_numbers::ComplexNumber,
     operand: complex_numbers::ComplexNumber,
@@ -19,6 +31,7 @@ fn find_converges(
     if iteration >= 255 {
         return None;
     }
+
     let result = iterate(&base, &operand);
 
     let magnitude = complex_numbers::get_magnitude(&result);
@@ -29,13 +42,14 @@ fn find_converges(
     find_converges(base, result, iteration + 1)
 }
 
+// maps a number between 0 and 255 to a pixel color
 fn map_i32_to_pixel(value: u8) -> Pixel {
     px!(255, 255 - value, 255 - value)
 }
 
 fn main() {
     let out_of_bounds: f32 = 2.0;
-    let resolution: u16 = 24000;
+    let resolution: u16 = 8000;
 
     let mut image = Image::new(u32::from(resolution), u32::from(resolution));
 

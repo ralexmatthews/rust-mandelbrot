@@ -3,10 +3,6 @@ pub struct ComplexNumber {
     pub imaginary: f32,
 }
 
-// fn numbers_are_equal(number1: &ComplexNumber, number2: &ComplexNumber) -> bool {
-//     number1.real == number2.real && number1.imaginary == number2.imaginary
-// }
-
 pub fn get_magnitude(complex_number: &ComplexNumber) -> f32 {
     (complex_number.real * complex_number.real)
         + (complex_number.imaginary * complex_number.imaginary)
