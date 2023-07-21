@@ -4,115 +4,114 @@ use bmp::{Image, Pixel};
 use std::thread;
 
 mod complex_numbers;
-
-// Returns the result of the Mandelbrot iteration
-// the next answer comes from squaring the previous answer and adding the base
-// operand^2 + base
-fn iterate(
-    base: complex_numbers::ComplexNumber,
-    operand: complex_numbers::ComplexNumber,
-) -> complex_numbers::ComplexNumber {
-    let operand_squared = complex_numbers::square_complex_number(operand);
-    complex_numbers::add_complex_numbers(operand_squared, base)
-}
-
-// Returns the number of iterations it took to either exceed two or repeat a number
-//
-// base is the complex number being tested
-// operand is the result of the current iteration and starts at 0
-// iteration is the number of iterations that have been performed so far
-// set_of_used_numbers is a list of numbers that have already been tested
-//
-// If the number converges, None is returned
-// If the number diverges, Some(iteration) is returned
-fn find_converges(
-    base: complex_numbers::ComplexNumber,
-    operand: complex_numbers::ComplexNumber,
-    iteration: u16,
-) -> Option<u16> {
-    if iteration >= 1024 {
-        return None;
-    }
-
-    let result = iterate(base, operand);
-
-    let magnitude = complex_numbers::get_magnitude(result);
-    if magnitude >= 2.0 {
-        return Some(iteration);
-    }
-
-    find_converges(base, result, iteration + 1)
-}
+mod mandelbrot;
 
 // maps a number between 0 and 1024 to a pixel color
 fn map_iterations_to_pixel(value: u16) -> Pixel {
-    let mapped_value = 255 - (value / 4);
-    px!(mapped_value, 255, mapped_value)
+    let u32_value = u32::from(value);
+    let color_points: [(u32, (u32, u32, u32)); 6] = [
+        (1024, (0, 0, 0)),    // black
+        (256, (0, 0, 64)),    // blue
+        (192, (102, 0, 0)),   // maroon
+        (128, (255, 0, 0)),   // red
+        (64, (255, 165, 0)),  // orange
+        (0, (255, 255, 255)), // white
+    ];
+
+    let index = color_points
+        .iter()
+        .position(|x| x.0 <= u32_value)
+        .unwrap_or(5);
+
+    if index == 0 {
+        return px!(0, 0, 0);
+    }
+
+    let (r1, g1, b1) = color_points[index].1;
+    let (r2, g2, b2) = color_points[index - 1].1;
+
+    let diff_from_prev = color_points[index - 1].0 - u32_value;
+    let diff_from_next = u32_value - color_points[index].0;
+    let total_diff = diff_from_prev + diff_from_next;
+
+    let get_average = |x1, x2| (((diff_from_prev) * x1) + ((diff_from_next) * x2)) / total_diff;
+
+    let r_average = get_average(r1, r2);
+    let g_average = get_average(g1, g2);
+    let b_average = get_average(b1, b2);
+
+    px!(r_average, g_average, b_average)
+}
+
+fn do_work(begin: i32, end: i32, half_of_resolution: i32, out_of_bounds: f64) -> Vec<Vec<Pixel>> {
+    let float_half_of_resolution = f64::from(half_of_resolution);
+    let mut pixels = vec![];
+    for y in begin..end {
+        let mut row = vec![];
+        for x in -half_of_resolution..half_of_resolution {
+            let complex_number = complex_numbers::ComplexNumber {
+                real: (f64::from(x) / float_half_of_resolution) * out_of_bounds,
+                imaginary: (f64::from(y) / float_half_of_resolution) * out_of_bounds,
+            };
+
+            let result = mandelbrot::find_converges(complex_number, complex_numbers::zero(), 0);
+
+            let pixel = match result {
+                Some(x) => map_iterations_to_pixel(x),
+                None => px!(0, 0, 0),
+            };
+
+            row.push(pixel);
+        }
+        pixels.push(row);
+    }
+    pixels
 }
 
 fn main() {
-    let out_of_bounds: f32 = 2.0;
-    let resolution: u16 = 4000;
+    let out_of_bounds: f64 = 2.0;
+    let resolution: u16 = 24000;
 
     let mut image = Image::new(u32::from(resolution), u32::from(resolution));
 
-    let half_of_resolution = i16::try_from(resolution).unwrap() / 2;
+    let half_of_resolution = i32::from(resolution) / 2;
 
-    let float_half_of_resolution = f32::from(half_of_resolution);
+    let threads = [
+        thread::spawn(move || {
+            do_work(
+                -half_of_resolution,
+                -(half_of_resolution / 2),
+                half_of_resolution,
+                out_of_bounds,
+            )
+        }),
+        thread::spawn(move || {
+            do_work(
+                -(half_of_resolution / 2),
+                0,
+                half_of_resolution,
+                out_of_bounds,
+            )
+        }),
+        thread::spawn(move || {
+            do_work(0, half_of_resolution / 2, half_of_resolution, out_of_bounds)
+        }),
+        thread::spawn(move || {
+            do_work(
+                half_of_resolution / 2,
+                half_of_resolution,
+                half_of_resolution,
+                out_of_bounds,
+            )
+        }),
+    ];
 
-    let thread1 = thread::spawn(move || {
-        let mut pixels = vec![];
-        for y in -half_of_resolution..-1 {
-            let mut row = vec![];
-            for x in -half_of_resolution..half_of_resolution {
-                let complex_number = complex_numbers::ComplexNumber {
-                    real: (f32::from(x) / float_half_of_resolution) * out_of_bounds,
-                    imaginary: (f32::from(y) / float_half_of_resolution) * out_of_bounds,
-                };
+    let thread_results = threads.map(|t| t.join().unwrap());
 
-                let result = find_converges(complex_number, complex_numbers::zero(), 0);
-
-                let pixel = match result {
-                    Some(x) => map_iterations_to_pixel(x),
-                    None => px!(0, 0, 0),
-                };
-
-                row.push(pixel);
-            }
-            pixels.push(row);
-        }
-        pixels
-    });
-    let thread2 = thread::spawn(move || {
-        let mut pixels = vec![];
-        for y in 0..half_of_resolution {
-            let mut row = vec![];
-            for x in -half_of_resolution..half_of_resolution {
-                let complex_number = complex_numbers::ComplexNumber {
-                    real: (f32::from(x) / float_half_of_resolution) * out_of_bounds,
-                    imaginary: (f32::from(y) / float_half_of_resolution) * out_of_bounds,
-                };
-
-                let result = find_converges(complex_number, complex_numbers::zero(), 0);
-
-                let pixel = match result {
-                    Some(x) => map_iterations_to_pixel(x),
-                    None => px!(0, 0, 0),
-                };
-
-                row.push(pixel);
-            }
-            pixels.push(row);
-        }
-        pixels
-    });
-
-    let top_pixels = thread1.join().unwrap();
-    let bottom_pixels = thread2.join().unwrap();
-
-    let all_pixels = top_pixels
+    let all_pixels = thread_results
         .iter()
-        .chain(bottom_pixels.iter())
+        .flat_map(|x| x.iter())
+        .cloned()
         .collect::<Vec<_>>();
 
     for y in 0..(resolution - 1) {
@@ -125,16 +124,8 @@ fn main() {
     let u_half = u32::from(resolution / 2);
     for x in 0..u32::from(resolution) {
         image.set_pixel(u_half, x, px!(0, 0, 0));
-        image.set_pixel(u_half + 1, x, px!(0, 0, 0));
-        image.set_pixel(u_half - 1, x, px!(0, 0, 0));
-        image.set_pixel(u_half + 2, x, px!(0, 0, 0));
-        image.set_pixel(u_half - 2, x, px!(0, 0, 0));
 
         image.set_pixel(x, u_half, px!(0, 0, 0));
-        image.set_pixel(x, u_half + 1, px!(0, 0, 0));
-        image.set_pixel(x, u_half - 1, px!(0, 0, 0));
-        image.set_pixel(x, u_half + 2, px!(0, 0, 0));
-        image.set_pixel(x, u_half - 2, px!(0, 0, 0));
     }
 
     let _ = image.save("fractal.bmp");

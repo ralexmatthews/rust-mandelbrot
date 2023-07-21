@@ -1,12 +1,13 @@
 #[derive(Debug, Copy, Clone)]
 pub struct ComplexNumber {
-    pub real: f32,
-    pub imaginary: f32,
+    pub real: f64,
+    pub imaginary: f64,
 }
 
-pub fn get_magnitude(complex_number: ComplexNumber) -> f32 {
-    (complex_number.real * complex_number.real)
-        + (complex_number.imaginary * complex_number.imaginary)
+pub fn get_magnitude(complex_number: ComplexNumber) -> f64 {
+    ((complex_number.real * complex_number.real)
+        + (complex_number.imaginary * complex_number.imaginary))
+        .sqrt()
 }
 
 pub fn square_complex_number(number: ComplexNumber) -> ComplexNumber {
