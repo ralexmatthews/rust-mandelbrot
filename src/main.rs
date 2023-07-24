@@ -30,9 +30,9 @@ const COLOR_POINTS: [(u32, (u32, u32, u32)); 6] = [
 const OUT_OF_BOUNDS: f64 = 2.0;
 
 // the resolution of the image, in pixels. The image will be RESOLUTION x RESOLUTION
-const RESOLUTION: u16 = 1000;
+const RESOLUTION: u16 = 4000;
 // it is also handy to have half the resolution as a constant, but it can't be based on RESOLUTION
-const HALF_OF_RESOLUTION: i32 = 500;
+const HALF_OF_RESOLUTION: i32 = 2000;
 
 // maps a number between 0 and 1024 to a pixel color
 fn map_iterations_to_pixel(value: u16) -> Pixel {

@@ -30,14 +30,17 @@ pub fn find_converges(
 
     let result = iterate(number_being_tested, current_iterant);
 
+    // if the next term is the same as the previous, we have converged
     if complex_numbers::are_equal(current_iterant, result) {
         return None;
     }
 
+    // if the magnitude of the result is greater than 2, we have diverged
     let magnitude = complex_numbers::get_magnitude_squared(result);
     if magnitude >= 4.0 {
         return Some(iteration);
     }
 
+    // inconclusive, so keep going
     find_converges(number_being_tested, result, iteration + 1)
 }
