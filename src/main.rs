@@ -25,14 +25,14 @@ const COLOR_POINTS: [(u32, (u32, u32, u32)); 6] = [
 //     (0, (0, 0, 64)),       // blue
 // ];
 
-// the edge of the coordinate system. For the mandelbrot set, it is proven that
+// the edge of the coordinate system. For the Mandelbrot Set, it is proven that
 // all complex numbers with a magnitude greater than 2 will diverge
 const OUT_OF_BOUNDS: f64 = 2.0;
 
 // the resolution of the image, in pixels. The image will be RESOLUTION x RESOLUTION
-const RESOLUTION: u16 = 1000;
+const RESOLUTION: u32 = 8000;
 // it is also handy to have half the resolution as a constant, but it can't be based on RESOLUTION
-const HALF_OF_RESOLUTION: i32 = 500;
+const HALF_OF_RESOLUTION: i32 = 4000;
 
 // maps a number between 0 and 1024 to a pixel color
 fn map_iterations_to_pixel(value: u16) -> Pixel {
@@ -54,8 +54,8 @@ fn map_iterations_to_pixel(value: u16) -> Pixel {
     let (r2, g2, b2) = COLOR_POINTS[index - 1].1;
 
     // get the total range between colors and how far it is in either direction of that range
-    let diff_from_prev = COLOR_POINTS[index - 1].0 - u32_value;
-    let diff_from_next = u32_value - COLOR_POINTS[index].0;
+    let diff_from_prev = u32_value.abs_diff(COLOR_POINTS[index - 1].0);
+    let diff_from_next = u32_value.abs_diff(COLOR_POINTS[index].0);
     let total_diff = diff_from_prev + diff_from_next;
 
     // get the average of the two colors based on how far it is in either direction of the range
@@ -81,13 +81,13 @@ fn do_work(begin: i32, end: i32) -> Vec<Vec<Pixel>> {
         // and make the left half negative
         for x in -HALF_OF_RESOLUTION..HALF_OF_RESOLUTION {
             // map our x and y values to the coordinate system we are testing
-            let complex_number = complex_numbers::ComplexNumber {
-                real: (f64::from(x) / float_half_of_resolution) * OUT_OF_BOUNDS,
-                imaginary: (f64::from(y) / float_half_of_resolution) * OUT_OF_BOUNDS,
-            };
+            let complex_number: complex_numbers::ComplexNumber = (
+                (f64::from(x) / float_half_of_resolution) * OUT_OF_BOUNDS,
+                (f64::from(y) / float_half_of_resolution) * OUT_OF_BOUNDS,
+            );
 
             // find the number of iterations it takes to diverge
-            let result = mandelbrot::find_converges(complex_number, complex_numbers::zero(), 0);
+            let result = mandelbrot::find_converges(complex_number, (0.0, 0.0), 0);
 
             let pixel = match result {
                 // some means that it diverges and is not in the set

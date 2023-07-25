@@ -1,43 +1,25 @@
-#[derive(Debug, Copy, Clone)]
-pub struct ComplexNumber {
-    pub real: f64,
-    pub imaginary: f64,
-}
+pub type ComplexNumber = (f64, f64);
 
 // checks if two complex numbers are equal, within a certain epsilon
 const EPSILON: f64 = 0.0000000000000001;
 pub fn are_equal(number1: ComplexNumber, number2: ComplexNumber) -> bool {
-    (number1.real - number2.real).abs() < EPSILON
-        && (number1.imaginary - number2.imaginary).abs() < EPSILON
+    (number1.0 - number2.0).abs() < EPSILON && (number1.1 - number2.1).abs() < EPSILON
 }
 
 // gets the square of the magnitude. This is faster than getting the actual magnitude
 // because it doesn't need to take the square root
 pub fn get_magnitude_squared(complex_number: ComplexNumber) -> f64 {
-    (complex_number.real * complex_number.real)
-        + (complex_number.imaginary * complex_number.imaginary)
+    (complex_number.0 * complex_number.0) + (complex_number.1 * complex_number.1)
 }
 
 pub fn square_complex_number(number: ComplexNumber) -> ComplexNumber {
     // (r1 * r1) + (r1 * i2) + (i1 + r2) + (i1 * i2)
-    ComplexNumber {
-        real: (number.real * number.real) - (number.imaginary * number.imaginary),
-        imaginary: (number.real * number.imaginary) * 2.0,
-    }
+    (
+        (number.0 * number.0) - (number.1 * number.1),
+        (number.0 * number.1) * 2.0,
+    )
 }
 
 pub fn add_complex_numbers(number1: ComplexNumber, number2: ComplexNumber) -> ComplexNumber {
-    ComplexNumber {
-        real: number1.real + number2.real,
-        imaginary: number1.imaginary + number2.imaginary,
-    }
-}
-
-// returns a complex number with a real and imaginary part of 0. This is more semantic
-// than creating a new complex number with 0.0 for both parts
-pub fn zero() -> ComplexNumber {
-    ComplexNumber {
-        real: 0.0,
-        imaginary: 0.0,
-    }
+    (number1.0 + number2.0, number1.1 + number2.1)
 }
