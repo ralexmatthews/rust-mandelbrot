@@ -1,3 +1,5 @@
 /target
 fractal.bmp
 .DS_Store
+.nova/
+.vscode/
