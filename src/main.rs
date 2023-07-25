@@ -1,6 +1,5 @@
-#[macro_use]
 extern crate bmp;
-use bmp::{Image, Pixel};
+use crate::bmp::{px, Image, Pixel};
 use std::thread;
 
 mod complex_numbers;
@@ -16,6 +15,7 @@ const COLOR_POINTS: [(u32, (u32, u32, u32)); 6] = [
     (64, (255, 165, 0)),  // orange
     (0, (255, 255, 255)), // white
 ];
+// this color scheme will give an alternative blue-ish background
 // const COLOR_POINTS: [(u32, (u32, u32, u32)); 6] = [
 //     (1024, (0, 0, 0)),     // black
 //     (256, (255, 165, 0)),  // orange
@@ -26,13 +26,14 @@ const COLOR_POINTS: [(u32, (u32, u32, u32)); 6] = [
 // ];
 
 // the edge of the coordinate system. For the Mandelbrot Set, it is proven that
-// all complex numbers with a magnitude greater than 2 will diverge
+// all complex numbers with a magnitude greater than 2 will diverge, so we'll
+// ignore anything outside that boundary
 const OUT_OF_BOUNDS: f64 = 2.0;
 
 // the resolution of the image, in pixels. The image will be RESOLUTION x RESOLUTION
-const RESOLUTION: u32 = 8000;
+const RESOLUTION: u32 = 16000;
 // it is also handy to have half the resolution as a constant, but it can't be based on RESOLUTION
-const HALF_OF_RESOLUTION: i32 = 4000;
+const HALF_OF_RESOLUTION: i32 = 8000;
 
 // maps a number between 0 and 1024 to a pixel color
 fn map_iterations_to_pixel(value: u16) -> Pixel {
