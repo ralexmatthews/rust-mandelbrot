@@ -133,18 +133,17 @@ fn main() -> std::io::Result<()> {
         .collect::<Vec<_>>();
 
     // set all the pixels to the image
-    for y in 0..(RESOLUTION) {
-        for x in 0..(RESOLUTION) {
+    for y in 0..RESOLUTION {
+        for x in 0..RESOLUTION {
             let pixel = all_pixels[y as usize][x as usize];
-            image.set_pixel(u32::try_from(x).unwrap(), u32::try_from(y).unwrap(), pixel);
+            image.set_pixel(x, y, pixel);
         }
     }
 
     // draw the x and y axis
-    let u_half = u32::from(RESOLUTION / 2);
+    let u_half = HALF_OF_RESOLUTION as u32;
     for x in 0..u32::from(RESOLUTION) {
         image.set_pixel(u_half, x, px!(0, 0, 0));
-
         image.set_pixel(x, u_half, px!(0, 0, 0));
     }
 
