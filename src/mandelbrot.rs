@@ -36,8 +36,8 @@ pub fn find_converges(
     }
 
     // if the magnitude of the result is greater than 2, we have diverged
-    let magnitude = complex_numbers::get_magnitude_squared(result);
-    if magnitude >= 4.0 {
+    let magnitude_squared = complex_numbers::get_magnitude_squared(result);
+    if magnitude_squared >= 4.0 {
         return Some(iteration);
     }
 
